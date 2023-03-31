@@ -28,10 +28,7 @@ def connect_dydx():
 )
 
     # Confirm client
-    account = client.private.get_account()
-    account_id = account.data["account"]["id"]
-
-    print(account_id)
+    print("Connection with DYDX was successfull")
 
     return client
 
