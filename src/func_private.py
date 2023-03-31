@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import time 
 from pprint import pprint
 from func_utils import format_number
-import pytz
+
 
 # Place market order
 def place_market_order(client, market, side, size, price, reduce_only):
