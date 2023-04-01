@@ -5,6 +5,12 @@ from pprint import pprint
 
 # Class: Agent for managing opening and checking trades
 
+"""
+    BotAgent Class
+    Allows to place trades
+
+"""
+
 class BotAgent:
 
     def __init__(
@@ -112,21 +118,100 @@ class BotAgent:
                 market=self.market_1,
                 side=self.base_side,
                 size=self.base_size,
-                price=self.base_price
+                price=self.base_price,
                 reduce_only=False
             )
 
-
-
+            # Store the order id 
+            self.order_dict["order_id_m1"] = base_order["order"]["id"]
+            self.order_dict["order_time_m1"] = datetime.now().isoformat()
 
         except Exception as e:
-            pass
+            self.order_dict["pair_status"] = "ERROR"
+            self.order_dict["comments"] = f"Market 1 {self.market_1}, {e}"
+
+            return self.order_dict
+
+        # Ensure order is live before processing 
+        order_status_m1 = self.check_order_status_by_id(self.order_dict["order_id_m1"])
+
+        # Abort if order failed
+        if order_status_m1 != "live":
+            self.order_dict["pair_status"] = "ERROR"
+            self.order_dict["comments"] = f"{self.market_1} failed to fill"
+            return self.order_dict
 
 
-    
+        # Print status
+        print("-------------------------------------")
+        print(f"{self.market_2}: Placing second order...")
+        print(f"Side: {self.quote_side}, Size: {self.quote_size}, Price: {self.quote_price}")
+        print("-------------------------------------")
 
 
-    
+        try:
+            quote_order = place_market_order(
+                self.client,
+                market=self.market_2,
+                side=self.quote_side,
+                size=self.quote_size,
+                price=self.quote_price,
+                reduce_only=False
+            )
+
+            # Store the order id 
+            self.order_dict["order_id_m2"] = quote_order["order"]["id"]
+            self.order_dict["order_time_m2"] = datetime.now().isoformat()
+
+        except Exception as e:
+            self.order_dict["pair_status"] = "ERROR"
+            self.order_dict["comments"] = f"Market 2 {self.market_2}, {e}"
+
+            return self.order_dict
+
+        # Ensure order is live before processing 
+        order_status_m2 = self.check_order_status_by_id(self.order_dict["order_id_m2"])
+
+        # Abort if order failed
+        if order_status_m2 != "live":
+            self.order_dict["pair_status"] = "ERROR"
+            self.order_dict["comments"] = f"{self.market_2} failed to fill"
+
+            # Close order 1:
+            try:
+                close_order = place_market_order(
+                    self.client,
+                    market=self.market_1,
+                    side=self.quote_side,
+                    size=self.base_size,
+                    price=self.accept_failsafe_base_price,
+                    reduce_only=False
+                )
+
+                # Ensure order is live before proceeding 
+                time.sleep(2)
+                order_status_close_order = check_order_status(self.client, close_order["order"]["id"])
+                if order_status_close_order != "FILLED":
+                    print("ABORT STATBOT")
+                    print(order_status_close_order)
+                    # Send message
+
+                    exit(1)
+
+            except Exception as e:
+                self.order_dict["pair_status"] = "ERROR"
+                self.order_dict["comments"] = f"Close Market 1 {self.market_1}, {e}"
+
+                print("ABORT STATBOT")
+                print(order_status_close_order)
+                exit(1)
+
+        else:
+            self.order_dict['pair_status'] = "LIVE"
+            return self.order_dict
+
+
+
 
 
 

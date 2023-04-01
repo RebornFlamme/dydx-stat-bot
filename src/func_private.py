@@ -3,6 +3,24 @@ import time
 from pprint import pprint
 from func_utils import format_number
 
+
+# Get existing open positions 
+def is_open_positions(client, market):
+  
+  time.sleep(0.2)
+
+  all_positions = client.private.get_positions(
+    market=market,
+    status="OPEN"
+  )
+
+  if len(all_positions.data["positions"]) > 0:
+    return True
+
+  else:
+    return False
+
+
 # Check order status
 def check_order_status(client, order_id):
   order = client.private.get_order_by_id(order_id)
