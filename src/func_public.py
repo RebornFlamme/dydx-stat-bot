@@ -75,7 +75,7 @@ def construct_market_prices(client):
         print(nans)
         df.drop(columns=nans, inplace=True)
 
-    print(df.head())
+    print(df.tail())
 
     return df
 
