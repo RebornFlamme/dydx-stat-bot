@@ -64,10 +64,6 @@ if PLACE_TRADES == True:
         print("Finding trading opportunities...")
         open_positions(client)
         
-        if stores_result != "saved":
-            print("Error saving cointegrated pairs")
-            exit(1)
-
     except Exception as e:
         print("Error trading pairs", e)
         exit(1)
