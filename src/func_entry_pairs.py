@@ -63,6 +63,61 @@ def open_positions(client):
                     quote_price = series_2[-1]
                     accept_base_price = float(base_price) * 1.01 if z_score < 0 else float(base_price) * 0.99
                     accept_quote_price = float(quote_price) * 1.01 if z_score > 0 else float(quote_price) * 0.99
+                    failsafe_base_price = float(base_price) * 0.05 if z_score < 0 else float(base_price) * 1.50
+                    failsafe_quote_price = float(base_price) * 0.05 if z_score > 0 else float(base_price) * 1.7
+                    base_tick_size = markets["markets"][base_market]["tickSize"]
+                    quote_tick_size = markets["markets"][quote_market]["tickSize"]
+
+                    # Format prices
+                    accept_base_price = format_number(accept_base_price, base_tick_size)
+                    accept_quote_price = format_number(accept_quote_price, quote_tick_size)
+                    accept_failsafe_base_price = format_number(failsafe_base_price, base_tick_size)
+                    accept_failsafe_quote_price = format_number(failsafe_quote_price, quote_tick_size)
+
+
+                    # Get size 
+                    base_quantity = 1 / base_price * USD_PER_TRADE
+                    quote_quantity = 1 / quote_price * USD_PER_TRADE
+                    base_step_size = markets["markets"][base_market]["stepSize"]
+                    quote_step_size = markets["markets"][quote_market]["stepSize"]
+                    
+                    # Format sizes
+                    base_size = format_number(base_quantity, base_step_size)
+                    quote_size = format_number(quote_quantity, quote_step_size)
+
+                    # Ensure size 
+                    base_min_order_size = markets["markets"][base_market]["minOrderSize"]
+                    quote_min_order_size = markets["markets"][quote_market]["minOrderSize"]
+                    
+                    check_base = float(base_quantity) > float(base_min_order_size)
+                    check_quote = float(quote_quantity) > float(quote_min_order_size)
+
+                    # If check pass, place trades
+                    if check_base and check_quote: 
+
+                        # Check account balance
+                        account = client.private.get_account()
+                        free_collateral = float(account.data["account"]["freeCollateral"])
+                        print(f"Balance : {free_collateral}")
+
+                        # Ensure collateral
+                        if free_collateral < USD_MIN_COLLATERAL:
+                            break
+
+                        # Create bot agent
+                        print(base_market, base_side, base_size, accept_base_price)
+                        print(quote_market, quote_side, quote_size, accept_quote_price)
+                        exit(1)
+
+
+
+
+
+
+
+
+
+
 
 
 
